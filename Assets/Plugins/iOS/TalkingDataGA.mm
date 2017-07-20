@@ -1,5 +1,5 @@
 //
-//  TDCInterface.mm
+//  TalkingDataGA.mm
 //  TalkingData
 //
 //  Created by Biao Hou on 12-6-21.
