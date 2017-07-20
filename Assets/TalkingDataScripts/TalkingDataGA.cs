@@ -24,6 +24,12 @@ public class TalkingDataGA {
 	[DllImport ("__Internal")]
 	private static extern void tdgaSetVerboseLogDisabled();
 	
+	[DllImport ("__Internal")]
+	private static extern void tdgaSetDeviceToken(string deviceToken);
+	
+	[DllImport ("__Internal")]
+	private static extern void tdgaHandlePushMessage(string message);
+	
 	private static bool hasTokenBeenObtained = false;
 #elif UNITY_ANDROID
 	//init static class --save memory/space
@@ -184,4 +190,60 @@ public class TalkingDataGA {
 #endif
 		}
 	}
+
+#if UNITY_IPHONE
+#if UNITY_5
+	public static void SetDeviceToken() {
+		if (!hasTokenBeenObtained) {
+			byte[] byteToken = UnityEngine.iOS.NotificationServices.deviceToken;
+			if(byteToken != null) {
+				string deviceToken = System.BitConverter.ToString(byteToken).Replace("-","");
+				tdgaSetDeviceToken(deviceToken);
+				hasTokenBeenObtained = true;
+			}
+		}
+	}
+	
+	public static void HandlePushMessage() {
+		UnityEngine.iOS.RemoteNotification[] notifications = UnityEngine.iOS.NotificationServices.remoteNotifications;
+		if (notifications != null) {
+			UnityEngine.iOS.NotificationServices.ClearRemoteNotifications();
+			foreach (UnityEngine.iOS.RemoteNotification rn in notifications) {
+				foreach (DictionaryEntry de in rn.userInfo) {
+					if (de.Key.ToString().Equals("sign")) {
+						string sign = de.Value.ToString();
+						tdgaHandlePushMessage(sign);
+					}
+				}
+			}
+		}
+	}
+#else
+	public static void SetDeviceToken() {
+		if (!hasTokenBeenObtained) {
+			byte[] byteToken = NotificationServices.deviceToken;
+			if(byteToken != null) {
+				string deviceToken = System.BitConverter.ToString(byteToken).Replace("-","");
+				tdgaSetDeviceToken(deviceToken);
+				hasTokenBeenObtained = true;
+			}
+		}
+	}
+
+	public static void HandlePushMessage() {
+		RemoteNotification[] notifications = NotificationServices.remoteNotifications;
+		if (notifications != null) {
+			NotificationServices.ClearRemoteNotifications();
+			foreach (RemoteNotification rn in notifications) {
+				foreach (DictionaryEntry de in rn.userInfo) {
+					if (de.Key.ToString().Equals("sign")) {
+						string sign = de.Value.ToString();
+						tdgaHandlePushMessage(sign);
+					}
+				}
+			}
+		}
+	}
+#endif
+#endif
 }
